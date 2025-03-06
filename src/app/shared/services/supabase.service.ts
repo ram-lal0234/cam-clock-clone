@@ -1,8 +1,8 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { SupabaseClient, AuthChangeEvent, Session } from '@supabase/supabase-js';
-import { Observable } from 'rxjs';
 import { User } from '../models/user.model';
 import { SUPABASE_CLIENT } from '../providers/supabase.provider';
+import { UserProfile } from '../models/user-profile.model';
 
 @Injectable({
   providedIn: 'root'
@@ -126,5 +126,11 @@ export class SupabaseService {
       console.error('Error creating user:', error);
       throw error;
     }
+  }
+
+  async createUserProfile(profile: UserProfile) {
+    return this.supabase
+      .from('user_profiles')
+      .insert(profile);
   }
 }

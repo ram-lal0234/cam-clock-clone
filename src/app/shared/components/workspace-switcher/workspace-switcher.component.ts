@@ -19,7 +19,7 @@ import { Workspace } from '../../models/workspace.model';
         </div>
         <div class="text-left">
           <div class="text-sm font-medium text-gray-900">{{ currentWorkspace.name }}</div>
-          <div class="text-xs text-gray-500">{{ currentWorkspace.is_personal ? 'Personal' : 'Team' }}</div>
+          <div class="text-xs text-gray-500">{{  'Team' }}</div>
         </div>
         <svg
           class="h-4 w-4 text-gray-400"
@@ -47,14 +47,14 @@ import { Workspace } from '../../models/workspace.model';
               *ngFor="let workspace of workspaces"
               (click)="selectWorkspace(workspace)"
               class="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 cursor-pointer"
-              [class.bg-indigo-50]="workspace.id === currentWorkspace?.id"
+              [class.bg-indigo-50]="currentWorkspace && workspace.id === currentWorkspace.id"
             >
               <div class="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center">
                 <span class="text-white font-medium text-sm">{{ getInitials(workspace.name) }}</span>
               </div>
               <div class="flex-1 min-w-0">
                 <div class="text-sm font-medium text-gray-900 truncate">{{ workspace.name }}</div>
-                <div class="text-xs text-gray-500">{{ workspace.is_personal ? 'Personal' : 'Team' }}</div>
+                <div class="text-xs text-gray-500">{{ 'Team' }}</div>
               </div>
               <div *ngIf="workspace.id === currentWorkspace?.id" class="text-indigo-600">
                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">

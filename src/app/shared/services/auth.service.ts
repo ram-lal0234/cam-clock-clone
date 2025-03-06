@@ -1,9 +1,10 @@
 import { Injectable, signal, effect } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { Observable, from } from 'rxjs';
-import { map, catchError, tap } from 'rxjs/operators';
+import { map, catchError, tap, switchMap } from 'rxjs/operators';
 import { User } from '../models/user.model';
 import { User as SupabaseUser } from '@supabase/supabase-js';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +13,10 @@ export class AuthService {
   private userSignal = signal<User | null>(null);
   user$ = this.userSignal.asReadonly();
 
-  constructor(private supabase: SupabaseService) {
+  constructor(
+    private supabase: SupabaseService,
+    private router: Router
+  ) {
     // Initialize user state from session
     this.supabase.getCurrentUser().then(({ data: { user } }) => {
       if (user) {
@@ -56,9 +60,30 @@ export class AuthService {
 
   signUp(email: string, password: string, name: string): Observable<{ user: User | null; session: any }> {
     return from(this.supabase.signUp(email, password)).pipe(
+      switchMap((response) => {
+        if (!response.user) throw new Error('No user data returned');
+
+        // Create user profile
+        const userProfile = {
+          id: response.user.id,
+          email: response.user.email!,
+          full_name: name,
+          first_name: name.split(' ')[0] || '',
+          last_name: name.split(' ').slice(1).join(' ') || '',
+          timezone: 'UTC',
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          last_login: new Date().toISOString()
+        };
+
+        return from(this.supabase.createUserProfile(userProfile)).pipe(
+          map(() => ({ user: response.user, session: response.session }))
+        );
+      }),
       tap(() => {
-        // After successful signup, create user in users table
-        this.createUserInTable(email, name);
+        // Navigate to create workspace page after successful signup
+        this.router.navigate(['/auth/create-workspace']);
       }),
       map(data => ({
         user: data.user ? this.mapSupabaseUser(data.user) : null,
@@ -69,19 +94,6 @@ export class AuthService {
         throw error;
       })
     );
-  }
-
-  private async createUserInTable(email: string, name: string) {
-    const { data: { user } } = await this.supabase.getCurrentUser();
-    if (!user) return;
-
-    await this.supabase.createUser({
-      id: user.id,
-      email: email,
-      display_name: name,
-      created_at: new Date().toISOString(),
-      last_login: new Date().toISOString()
-    });
   }
 
   signIn(email: string, password: string): Observable<User> {
@@ -99,7 +111,10 @@ export class AuthService {
 
   signOut(): Observable<void> {
     return from(this.supabase.signOut()).pipe(
-      tap(() => this.userSignal.set(null)),
+      tap(() => {
+        this.userSignal.set(null);
+        this.router.navigate(['/auth/login']);
+      }),
       catchError(error => {
         console.error('Sign out error:', error);
         throw error;

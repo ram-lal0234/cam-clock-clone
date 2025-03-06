@@ -45,7 +45,7 @@ export class WorkspaceService {
         return;
       }
 
-      const workspaces = (data || []).map(member => ({
+      const workspaces = ((data || []) as unknown as { workspace: { id: string; name: string; owner_id: string; created_at: string; updated_at: string } }[]).map(member => ({
         id: member.workspace.id,
         name: member.workspace.name,
         ownerId: member.workspace.owner_id,
@@ -57,9 +57,9 @@ export class WorkspaceService {
 
       this.workspacesSignal.set(workspaces);
 
-      // Then, get the current workspace
+      // Then, get the current workspace from user_profiles
       from(this.supabase
-        .from('users')
+        .from('user_profiles')
         .select('workspace_id')
         .eq('id', userId)
         .single()
@@ -108,8 +108,12 @@ export class WorkspaceService {
         return {
           ...data,
           id: data.id,
+          name: data.name,
+          ownerId: data.owner_id,
+          isPersonal: data.owner_id === user.id,
           createdAt: new Date(data.created_at),
-          updatedAt: new Date(data.updated_at)
+          updatedAt: new Date(data.updated_at),
+          members: [] // Will be populated later
         };
       }),
       switchMap(workspace => {
@@ -178,7 +182,7 @@ export class WorkspaceService {
       .from('workspace_members')
       .select(`
         *,
-        user:users(*)
+        user:user_profiles(*)
       `)
       .eq('workspace_id', workspaceId)
     ).pipe(
@@ -187,8 +191,12 @@ export class WorkspaceService {
         return data.map(member => ({
           ...member.user,
           id: member.user.id,
+          email: member.user.email,
           createdAt: new Date(member.user.created_at),
-          lastLogin: new Date(member.user.last_sign_in_at)
+          updatedAt: new Date(member.user.updated_at),
+          fullName: member.user.full_name,
+          avatarUrl: member.user.avatar_url,
+          role: member.role
         }));
       })
     );
@@ -196,8 +204,8 @@ export class WorkspaceService {
 
   addMember(workspaceId: string, email: string, role: 'admin' | 'member'): Observable<void> {
     return from(this.supabase
-      .from('users')
-      .select('id')
+      .from('user_profiles')
+      .select('id, email')
       .eq('email', email)
       .single()
     ).pipe(
@@ -257,7 +265,7 @@ export class WorkspaceService {
     }
 
     return from(this.supabase
-      .from('users')
+      .from('user_profiles')
       .update({
         workspace_id: workspace.id,
         updated_at: new Date().toISOString()

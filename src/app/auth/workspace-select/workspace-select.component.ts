@@ -126,6 +126,7 @@ export class WorkspaceSelectComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    console.log('ngOnInit', this.currentUser);
     // Initial load will be handled by the effect
   }
 

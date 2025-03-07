@@ -1,0 +1,35 @@
+.switcher-container {
+  @apply relative;
+}
+
+.switcher-button {
+  @apply flex items-center space-x-3 text-gray-700 hover:text-gray-900 focus:outline-none;
+}
+
+.workspace-name {
+  @apply text-sm font-medium;
+}
+
+.dropdown-icon {
+  @apply h-5 w-5;
+}
+
+.dropdown-menu {
+  @apply absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5;
+}
+
+.menu-content {
+  @apply py-1;
+}
+
+.workspace-item {
+  @apply block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100;
+}
+
+.menu-footer {
+  @apply border-t;
+}
+
+.menu-item {
+  @apply block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100;
+}

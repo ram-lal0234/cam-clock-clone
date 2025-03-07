@@ -1,0 +1,7 @@
+.logo-container {
+  @apply h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center;
+}
+
+.app-title {
+  @apply text-xl font-bold text-gray-900;
+}

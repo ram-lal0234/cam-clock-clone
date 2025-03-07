@@ -1,0 +1,72 @@
+<div class="py-6">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-semibold text-gray-900">Create New Project</h1>
+    </div>
+
+    <p-card>
+      <form [formGroup]="projectForm" (ngSubmit)="onSubmit()" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="col-span-2">
+            <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Project Name*</label>
+            <input pInputText
+                   id="name"
+                   formControlName="name"
+                   class="w-full"
+                   [ngClass]="{'ng-invalid ng-dirty': projectForm.get('name')?.invalid && projectForm.get('name')?.touched}">
+            <small class="text-red-500" *ngIf="projectForm.get('name')?.invalid && projectForm.get('name')?.touched">
+              Project name is required (minimum 3 characters)
+            </small>
+          </div>
+
+          <div class="col-span-2">
+            <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea pInputTextarea
+                      id="description"
+                      formControlName="description"
+                      rows="3"
+                      class="w-full"></textarea>
+          </div>
+
+          <div>
+            <label for="client" class="block text-sm font-medium text-gray-700 mb-1">Client</label>
+            <input pInputText
+                   id="client"
+                   formControlName="client"
+                   class="w-full">
+          </div>
+
+          <div>
+            <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+            <p-calendar formControlName="startDate"
+                       [showIcon]="true"
+                       [minDate]="minDate"
+                       dateFormat="dd/mm/yy"
+                       inputId="startDate"
+                       styleClass="w-full"></p-calendar>
+          </div>
+
+          <div>
+            <label for="endDate" class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+            <p-calendar formControlName="endDate"
+                       [showIcon]="true"
+                       [minDate]="projectForm.get('startDate')?.value || minDate"
+                       dateFormat="dd/mm/yy"
+                       inputId="endDate"
+                       styleClass="w-full"></p-calendar>
+          </div>
+        </div>
+
+        <div class="flex justify-end space-x-3">
+          <p-button label="Cancel" 
+                    (onClick)="cancel()" 
+                    styleClass="p-button-secondary"></p-button>
+          <p-button label="Create Project" 
+                    type="submit"
+                    [loading]="isLoading"
+                    [disabled]="projectForm.invalid"></p-button>
+        </div>
+      </form>
+    </p-card>
+  </div>
+</div>

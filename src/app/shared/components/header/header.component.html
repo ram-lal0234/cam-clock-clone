@@ -1,0 +1,23 @@
+<header class="bg-white shadow-sm">
+  <div class="max-w-7xl mx-auto px-3 sm:px-3 lg:px-3">
+    <div class="flex justify-between h-16">
+      <div class="flex items-center space-x-8">
+        <div class="flex-shrink-0 flex items-center">
+          <a routerLink="/dashboard" class="flex items-center space-x-2">
+            <div class="logo-container">
+              <svg class="h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <span class="app-title">TimeTracker</span>
+          </a>
+        </div>
+        <app-workspace-switcher></app-workspace-switcher>
+      </div>
+      
+      <div class="flex items-center">
+        <app-user-profile></app-user-profile>
+      </div>
+    </div>
+  </div>
+</header>

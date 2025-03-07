@@ -1,0 +1,43 @@
+.profile-container {
+  @apply relative;
+}
+
+.profile-button {
+  @apply flex items-center space-x-3 text-gray-700 hover:text-gray-900 focus:outline-none;
+}
+
+.avatar {
+  @apply h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center;
+}
+
+.initials {
+  @apply text-sm font-medium;
+}
+
+.dropdown-icon {
+  @apply h-5 w-5;
+}
+
+.dropdown-menu {
+  @apply absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5;
+}
+
+.menu-content {
+  @apply py-1;
+}
+
+.user-info {
+  @apply px-4 py-2 text-sm text-gray-700 border-b;
+}
+
+.email {
+  @apply font-medium;
+}
+
+.menu-item {
+  @apply block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100;
+}
+
+.sign-out {
+  @apply w-full text-left;
+}

@@ -1,0 +1,9 @@
+/* Add custom styles if needed */
+
+:host ::ng-deep .p-calendar {
+  width: 100%;
+}
+
+:host ::ng-deep .p-inputtext {
+  width: 100%;
+}

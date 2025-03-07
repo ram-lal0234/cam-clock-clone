@@ -10,6 +10,7 @@ import { Router } from '@angular/router';
   providedIn: 'root'
 })
 export class AuthService {
+  private initialized = false;
   private userSignal = signal<User | null>(null);
   user$ = this.userSignal.asReadonly();
 
@@ -21,6 +22,7 @@ export class AuthService {
     this.supabase.getCurrentUser().then(({ data: { user } }) => {
       if (user) {
         this.loadUserData(user.id);
+        this.initialized = true;  // Mark as initialized when user data is loaded
       }
     });
 
@@ -30,16 +32,26 @@ export class AuthService {
       if (user) {
         this.loadUserData(user.id);
       } else {
-        this.userSignal.set(null);
+        setTimeout(() => {
+          this.userSignal.set(null);
+          this.initialized = true;  // Mark as initialized even when no user
+        }, 0);
       }
-    });
+    }, { allowSignalWrites: true });
   }
 
   private async loadUserData(userId: string) {
     const { data: { user } } = await this.supabase.getCurrentUser();
     if (user) {
-      this.userSignal.set(this.mapSupabaseUser(user));
+      setTimeout(() => {
+        this.userSignal.set(this.mapSupabaseUser(user));
+        this.initialized = true;  // Mark as initialized after user data is set
+      }, 0);
     }
+  }
+
+  isInitialized(): boolean {
+    return this.initialized;
   }
 
   private mapSupabaseUser(supabaseUser: SupabaseUser): User {
@@ -105,6 +117,19 @@ export class AuthService {
       catchError(error => {
         console.error('Sign in error:', error);
         throw error;
+      })
+    );
+  }
+
+  initializeAuth(): Observable<void> {
+    return from(this.supabase.getCurrentUser()).pipe(
+      map(({ data: { user } }) => {
+        if (user) {
+          this.userSignal.set(this.mapSupabaseUser(user));
+        } else {
+          this.router.navigate(['/auth/login']);
+        }
+        return;
       })
     );
   }

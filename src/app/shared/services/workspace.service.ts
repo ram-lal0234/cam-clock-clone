@@ -1,8 +1,8 @@
 import { Injectable, inject, signal, effect } from '@angular/core';
 import { SupabaseClient, PostgrestResponse, PostgrestSingleResponse } from '@supabase/supabase-js';
 import { Observable, from, throwError } from 'rxjs';
-import { map, switchMap, catchError } from 'rxjs/operators';
-import { Workspace, WorkspaceMember } from '../models/workspace.model';
+import { map, switchMap,  } from 'rxjs/operators';
+import { Workspace } from '../models/workspace.model';
 import { SupabaseService } from './supabase.service';
 import { User } from '../models/user.model';
 import { SUPABASE_CLIENT } from '../providers/supabase.provider';
@@ -14,7 +14,7 @@ export class WorkspaceService {
   private supabase: SupabaseClient = inject(SUPABASE_CLIENT);
   private currentWorkspaceSignal = signal<Workspace | null>(null);
   private workspacesSignal = signal<Workspace[]>([]);
-  
+
   currentWorkspace$ = this.currentWorkspaceSignal.asReadonly();
   workspaces$ = this.workspacesSignal.asReadonly();
 
@@ -25,12 +25,14 @@ export class WorkspaceService {
       if (user?.id) {
         this.loadWorkspaces(user.id);
       } else {
-        this.currentWorkspaceSignal.set(null);
-        this.workspacesSignal.set([]);
+        // Move signal writes outside of effect using setTimeout
+        setTimeout(() => {
+          this.currentWorkspaceSignal.set(null);
+          this.workspacesSignal.set([]);
+        }, 0);
       }
-    });
+    }, { allowSignalWrites: true }); // Add allowSignalWrites option
   }
-
   private loadWorkspaces(userId: string) {
     // First, get all workspaces the user is a member of
     from(this.supabase
@@ -45,18 +47,22 @@ export class WorkspaceService {
         return;
       }
 
-      const workspaces = ((data || []) as unknown as { workspace: { id: string; name: string; owner_id: string; created_at: string; updated_at: string } }[]).map(member => ({
-        id: member.workspace.id,
-        name: member.workspace.name,
-        ownerId: member.workspace.owner_id,
-        isPersonal: member.workspace.owner_id === userId,
-        createdAt: new Date(member.workspace.created_at),
-        updatedAt: new Date(member.workspace.updated_at),
-        members: [] // Will be populated later if needed
-      })) as Workspace[];
-
-      this.workspacesSignal.set(workspaces);
-
+      const workspaces = ((data || []) as unknown as { workspace: { id: string; name: string; owner_id: string; created_at: string; updated_at: string } }[]).map(member => {
+        const workspace: Workspace = {
+          id: member.workspace.id,
+          name: member.workspace.name,
+          ownerId: member.workspace.owner_id,
+          isPersonal: member.workspace.owner_id === userId ? 'true' : 'false',
+          createdAt: new Date(member.workspace.created_at),
+          updatedAt: new Date(member.workspace.updated_at),
+          members: [] // Will be populated later if needed
+        };
+        return workspace;
+      });
+      // Move signal write outside of subscription
+      setTimeout(() => {
+        this.workspacesSignal.set(workspaces);
+      }, 0);
       // Then, get the current workspace from user_profiles
       from(this.supabase
         .from('user_profiles')
@@ -68,27 +74,25 @@ export class WorkspaceService {
           console.error('Error loading user workspace:', userError);
           return;
         }
-
         const currentWorkspace = workspaces.find(w => w.id === userData.workspace_id);
-        this.currentWorkspaceSignal.set(currentWorkspace || null);
+        // Move signal write outside of subscription
+        setTimeout(() => {
+          this.currentWorkspaceSignal.set(currentWorkspace || null);
+        }, 0);
       });
     });
   }
-
   getCurrentWorkspace(): Observable<Workspace | null> {
     return from([this.currentWorkspaceSignal()]);
   }
-
   getAllWorkspaces(): Observable<Workspace[]> {
     return from([this.workspacesSignal()]);
   }
-
   createWorkspace(name: string): Observable<Workspace> {
     const user = this.supabaseService.authState$();
     if (!user?.id) {
       return throwError(() => new Error('User not authenticated'));
     }
-
     const newWorkspace = {
       name,
       owner_id: user.id,
@@ -96,7 +100,6 @@ export class WorkspaceService {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
-
     return from(this.supabase
       .from('workspaces')
       .insert(newWorkspace)
@@ -124,7 +127,6 @@ export class WorkspaceService {
           role: 'admin',
           joined_at: new Date().toISOString()
         };
-
         return from(this.supabase
           .from('workspace_members')
           .insert(memberData)
@@ -135,7 +137,7 @@ export class WorkspaceService {
       switchMap(workspace => {
         // Update user with workspace ID
         return from(this.supabase
-          .from('users')
+          .from('user_profiles')
           .update({
             workspace_id: workspace.id,
             updated_at: new Date().toISOString()
@@ -147,13 +149,11 @@ export class WorkspaceService {
       })
     );
   }
-
   updateWorkspace(id: string, updates: Partial<Workspace>): Observable<void> {
     const updatedData = {
       ...updates,
       updated_at: new Date().toISOString()
     };
-
     return from(this.supabase
       .from('workspaces')
       .update(updatedData)
@@ -164,7 +164,6 @@ export class WorkspaceService {
       })
     );
   }
-
   deleteWorkspace(id: string): Observable<void> {
     return from(this.supabase
       .from('workspaces')
@@ -176,7 +175,6 @@ export class WorkspaceService {
       })
     );
   }
-
   getWorkspaceMembers(workspaceId: string): Observable<User[]> {
     return from(this.supabase
       .from('workspace_members')
@@ -201,7 +199,6 @@ export class WorkspaceService {
       })
     );
   }
-
   addMember(workspaceId: string, email: string, role: 'admin' | 'member'): Observable<void> {
     return from(this.supabase
       .from('user_profiles')
@@ -212,14 +209,12 @@ export class WorkspaceService {
       switchMap(({ data: user, error: userError }) => {
         if (userError) throw userError;
         if (!user) throw new Error('User not found');
-
         const newMember = {
           workspace_id: workspaceId,
           user_id: user.id,
           role,
           joined_at: new Date().toISOString()
         };
-
         return from(this.supabase
           .from('workspace_members')
           .insert(newMember)
@@ -231,7 +226,6 @@ export class WorkspaceService {
       })
     );
   }
-
   updateMemberRole(workspaceId: string, userId: string, role: 'admin' | 'member'): Observable<void> {
     return from(this.supabase
       .from('workspace_members')
@@ -244,7 +238,6 @@ export class WorkspaceService {
       })
     );
   }
-
   removeMember(workspaceId: string, userId: string): Observable<void> {
     return from(this.supabase
       .from('workspace_members')
@@ -257,13 +250,11 @@ export class WorkspaceService {
       })
     );
   }
-
   setCurrentWorkspace(workspace: Workspace): Observable<void> {
     const user = this.supabaseService.authState$();
     if (!user?.id) {
       return throwError(() => new Error('User not authenticated'));
     }
-
     return from(this.supabase
       .from('user_profiles')
       .update({

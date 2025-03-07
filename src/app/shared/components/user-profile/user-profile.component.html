@@ -1,0 +1,21 @@
+<div class="profile-container" *ngIf="user$() as user">
+  <button (click)="toggleMenu()" class="profile-button">
+    <div class="avatar">
+      <span class="initials">{{getUserInitials()}}</span>
+    </div>
+  </button>
+
+  <div *ngIf="isMenuOpen" class="dropdown-menu">
+    <div class="menu-content">
+      <div class="user-info">
+        <p class="email">{{user?.email}}</p>
+      </div>
+      <a routerLink="/settings/profile" class="menu-item">
+        Profile Settings
+      </a>
+      <button (click)="signOut()" class="menu-item sign-out">
+        Sign out
+      </button>
+    </div>
+  </div>
+</div>

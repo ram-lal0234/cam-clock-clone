@@ -6,8 +6,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <base href="/">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <style>
+      #app-loader {
+        position: fixed;
+        inset: 0;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .app-loading-spinner {
+        width: 48px;
+        height: 48px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
   </head>
   <body>
-    <app-root>Loading...</app-root>
+    <app-root>
+      <div id="app-loader">
+        <div class="app-loading-spinner"></div>
+      </div>
+    </app-root>
   </body>
 </html>
